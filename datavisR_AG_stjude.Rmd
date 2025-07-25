@@ -1,0 +1,925 @@
+---
+title: "Data Visualization using ggplot2 in R"
+author: "Aritra Ghosal, Ph.D."
+date: Post Doctoral Fellow at the Department of Biostatistics, St. Jude Children's
+  Research Hospital
+output:
+  html_document: default
+  pdf_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Some useful resources for further reading
+
+ - The documentation of the 'ggplot2' package. 
+          https://cran.r-project.org/web/packages/ggplot2/refman/ggplot2.html#scale_colour_hue
+
+ - A handy cheatsheet: https://github.com/rstudio/cheatsheets/blob/main/data-visualization.pdf
+ 
+ - The Grammar of Graphics by Leland Wilkinson (2005) (for rigorous study)
+ 
+ - A textbook, ggplot2: Elegant Graphics for Data Analysis (3rd Edition) by Hadley Wickham, Danielle Navarro,
+ Thomas Lin Pedersen (https://ggplot2-book.org)
+ 
+ - Another textbook, R for Data Science by Hadley Wickham, Garrett Grolemund, https://www.google.com/books/edition/R_for_Data_Science/I6y3DQAAQBAJ?hl=en&gbpv=0
+ 
+ - Many many blogs, websites, forums where R codes are discussed, e.g. R-bloggers, R-charts, stackoverflow etc.
+
+$$\\[0.1in]$$
+
+
+### What does the GG: grammar of Graphics involve?
+
+https://link.springer.com/chapter/10.1007/978-3-642-21551-3_13
+  
+  - Geoms & Aesthetic mappings:
+  
+A collection of geometric elements and statistical transformations also known as 'geoms' , represent the visual aspects e.g. points, lines, polygons, histograms etc. Statistical transformations, 'stats' for short, summarise the data: e.g. binning and counting observations to create a histogram, or fitting a linear model.
+
+  - Scales: 
+
+A map from data space to values in the aesthetic space. This includes the use of colour, shape or size. Scales also draw the legend and axes, which make it possible to read the original data values from the plot.
+
+  - Guides:
+  
+As scales provide a mapping from data values to a perceivable aesthetic value, guides perform the inverse mapping. That is, guides enable the user to infer the data value from the displayed aesthetic value. The most commonly used guides are coordinate axes and legends.
+
+  - Coordinate system: 
+
+Coordinate system, describes how data coordinates are mapped to the plane of the graphic. It also provides axes and gridlines to help read the graph.
+
+  - Facet: 
+  
+specifies how to break up and display subsets of data as small multiples.
+
+  - Theme
+  
+controls the finer points of display, like the font size and background colour.
+
+$$\\[0.1in]$$
+
+#### Read the libraries:
+
+```{r, message=FALSE, warning=FALSE}
+library("ggplot2")
+library("patchwork")
+library("RColorBrewer")
+library("astsa")
+library("MASS")
+library("viridis")
+```
+
+$$\\[0.1in]$$
+
+## Geoms and Aesthetic mappings:
+
+Examples: geom_line, geom_path for straight lines, geom_histogram, geom_bars, geom_boxplots etc. Each geom works with the aesthetic function 'aes' that maps the data values to the relevant components of the diagram.
+
+#### Inputs of the Aesthetics function "aes":
+
+  - x: variable in the horizontal axis (default).
+  
+  - y: variable in the vertical axis.
+  
+  - color: specification of the color of points, lines, or other plot elements for a variable. 
+
+  - fill: specification of the fill color of areas, bars, or other filled shapes for a variable. 
+
+  - size: specification of the size of points or lines for a variable.
+
+  - shape: specification of the shape of points for a variable.
+
+  - linetype: specification of the line type, e.g., dashed, dotted, solid (default) for a variable.
+  
+  - linewidth: specification of the width of the line for a variable.
+
+  - alpha: transparency of the plot, values ranging continuously from 0 (fully transparent) to 1 (fully opaque). 
+
+  - group: grouping methods for certain geoms.
+  
+  - label: Adds text label to selected data points. 
+
+
+### Example: Edgar Anderson's Iris Data
+
+#### Description
+
+This famous (Fisher's or Anderson's) iris data set gives the measurements in centimeters of the variables sepal length and sepal width and petal length and petal width, respectively, for 50 flowers from each of 3 species of iris. The species are setosa, versicolor, and virginica.
+
+```{r}
+head(iris)
+
+```
+
+### Building a plot from scratch
+
+```{r}
+p <- ggplot(iris, aes(x=Sepal.Width, y=Sepal.Length))
+p
+
+p + geom_point()
+
+p + geom_point(aes(color= Species))
+
+p + geom_point(aes(color= Species, size= Petal.Length))
+
+p + geom_point(aes(shape=Species, size= Petal.Length))
+
+p + geom_point(aes(color= Species, size= Petal.Length, alpha= Petal.Width))
+
+p <- ggplot(iris, aes(x=Sepal.Width, y=Sepal.Length))
+
+```
+
+#### Adding labels to the plot:
+
+```{r}
+p1<- p + geom_point(aes(color= Species, size= Petal.Length, alpha= Petal.Width)) +
+         labs(x = "Sepal Width (cm)",
+         y = "Sepal Length (cm)",
+         color = "Species",
+         size = "Petal Length (cm)",
+         alpha = "Petal Width (cm)",
+         title = "Measurement of iris",
+         subtitle = paste("Fisher's or Anderson's data on measurement of flower: iris"),
+         caption = "Data Source: R datasets")
+
+p1
+```
+
+### Adding more geoms:
+
+```{r}
+p+ geom_point()+
+  geom_smooth(aes(color = "loess"), method = "loess", se = F) + 
+  geom_smooth(aes(colour = "lm"), method = "lm", se = F) +
+  labs(color= "Method", x= "Sepal Width (cm)", 
+       y = "Sepal Length (cm)", color = "Species",
+       title = "Measurements of iris",
+        subtitle = paste("Fisher's or Anderson's data on measurement of flower: iris"),
+         caption = "Data Source: R datasets")
+
+p+ geom_point()+
+  geom_smooth(aes(color = "loess", linewidth=2), method = "loess", se = F) + 
+  geom_smooth(aes(colour = "lm", linewidth=2), method = "lm", se = F) +
+  labs(colour = "Method")+
+  labs(color= "Method", x= "Sepal Width (cm)", 
+       y = "Sepal Length (cm)", color = "Species",
+       title = "Measurements of iris",
+        subtitle = paste("Fisher's or Anderson's data on measurement of flower: iris"),
+         caption = "Data Source: R datasets")
+
+p+ geom_point()+
+  geom_smooth(aes(color = "loess", linewidth=2), method = "loess", se = T) + 
+  geom_smooth(aes(colour = "lm", linewidth=2), method = "lm", se = T) +
+  labs(colour = "Method") +
+  labs(color= "Method", x= "Sepal Width (cm)", 
+       y = "Sepal Length (cm)", color = "Species",
+       title = "Measurement of iris",
+        subtitle = paste("Fisher's or Anderson's data on measurement of flower: iris"),
+         caption = "Data Source: R datasets")
+
+```
+
+### Histograms
+
+The following are the histograms of Petal Lengths for various species of iris.
+
+```{r, message=FALSE}
+
+p <- ggplot(iris, aes(Petal.Length))
+
+p1 <- p + geom_histogram() +
+      labs(x = "Petal Length (cm)", title = "Histogram of 20 bins")
+
+p2 <- p + geom_histogram(bins=30) +
+      labs(x = "Petal Length (cm)", title = "Histogram of 30 bins")
+
+p3 <- p + geom_histogram(bins = 40) +
+      labs(x = "Petal Length (cm)", title = "Histogram of 40 bins")
+
+p4 <- p + geom_histogram(bins = 50) +
+      labs(x = "Petal Length (cm)", title = "Histogram of 50 bins")
+
+(p1+p2) / (p3+p4) # this is enabled by the patchwork package
+
+p + geom_histogram(aes(fill= Species, alpha= 0.5), bins = 30, 
+                   position = "identity")
+
+p + geom_histogram(aes(fill= Species, color= Species, alpha=0.4), position = "identity")+
+  labs(x = "Petal Length (cm)", title = "Histogram in position: identity")
+
+p + geom_histogram(aes(fill= Species, color= Species, alpha=0.4), position = "stack")+
+  labs(x = "Petal Length (cm)", title = "Histogram in position: stack")
+
+p + geom_histogram(aes(fill= Species, color= Species, alpha=0.4), position = "dodge")+
+  labs(x = "Petal Length (cm)", title = "Histogram in position: dodge")
+
+p + geom_histogram(aes(fill= Species, alpha= 0.5), 
+                   color = "black", position = "identity", lwd = 0.75,
+                 linetype = 1)+
+  labs(title = "Measurements of iris data", x= "Petal Length (cm)")
+
+```
+
+
+```{r, message=FALSE}
+ggplot(iris, aes(x= Petal.Length, fill = Species)) +
+geom_histogram(aes(y=after_stat(density), alpha = 0.5), color = "black",
+                   lwd = 0.75, position = "identity",
+                   linetype = 1)+
+  labs(title = "Measurements of iris data", x= "Petal Length (cm)") +
+  geom_density(alpha=.2)+
+  geom_rug()
+
+```
+
+### Densities of the data
+
+```{r}
+p <- ggplot(iris, aes(Petal.Width))
+p + geom_density()
+
+p1<- p + geom_density(aes(fill=Species))
+p1
+
+p2<- ggplot(iris, aes(Petal.Width)) + geom_density(aes(colour = Species))
+p2
+
+
+p11<- ggplot(iris, aes(Petal.Length)) + geom_density(aes(fill = Species))+
+  labs(title = "Petal Lengths: iris data", x= "Petal Length (cm)")
+
+p12<-  ggplot(iris, aes(Petal.Width)) + geom_density(aes(fill = Species))+
+  labs(title = "Petal Widths: iris data", x= "Petal Widths (cm)")
+
+p13<-  ggplot(iris, aes(Sepal.Length)) + geom_density(aes(fill = Species))+
+  labs(title = "Sepal Lengths: iris data", x= "Sepal Length (cm)")
+
+p14<-  ggplot(iris, aes(Sepal.Width)) + geom_density(aes(fill = Species)) +
+  labs(title = "Sepal Widths: iris data", x= "Sepal Widths (cm)")
+
+(p11+p12)/(p13+p14)
+
+```
+
+### Boxplots for the iris data
+
+```{r}
+p<- ggplot(iris, aes(x= Species, y=Sepal.Length))
+
+p + geom_boxplot() + 
+  labs(title = "Sepal length data grouped", y= "Sepal Length (cm)")
+  
+p+  geom_boxplot(aes(fill= Species)) + 
+  labs(title = "Sepal length grouped: fill", y= "Sepal Length (cm)")+
+
+p+  geom_boxplot(aes(color= Species)) + 
+  labs(title = "Sepal length grouped: color", y= "Sepal Length (cm)")
+
+p+  geom_boxplot(aes(fill= Species), outlier.shape = NA) + 
+  labs(title = "Sepal length grouped: color and jitter", y= "Sepal Length (cm)")+
+  geom_jitter()+
+
+p+  geom_boxplot(aes(color= Species), outlier.shape = NA) + 
+  labs(title = "Sepal length grouped: fill and jitter", y= "Sepal Length (cm)")+
+  geom_jitter()
+
+p+  geom_boxplot(aes(fill= Species), outlier.shape = NA) + 
+  labs(title = "Sepal length grouped: fill and jitter", y= "Sepal Length (cm)")+
+  geom_jitter(aes(color= Species))+
+
+p+  geom_boxplot(aes(color= Species), outlier.shape = NA) + 
+  labs(title = "Sepal length grouped: color and jitter", y= "Sepal Length (cm)")+
+  geom_jitter(color= 2)
+
+p+  geom_boxplot(aes(color= Species), outlier.shape = NA) + 
+  labs(title = "Sepal length grouped: jitters shaped", y= "Sepal Length (cm)")+
+  geom_jitter(aes(shape= Species)) 
+  
+p+  geom_boxplot(aes(color= Species), outlier.shape = NA) + 
+  labs(title = "Sepal length grouped: jitters shaped and colored", y= "Sepal Length (cm)")+
+  geom_jitter(aes(color= Species, shape= Species)) 
+
+```
+
+### Grouped boxplots:
+
+```{r}
+iris_plot<- data.frame(Measurement= c(iris$Sepal.Length, iris$Petal.Length,
+                                       iris$Sepal.Width, iris$Petal.Width),
+                        Dissection= rep(c("Sepal Length", "Petal Length",
+                                        "Sepal Width", "Petal Width"), each= nrow(iris)),
+                        Species= rep(iris$Species, 4) )
+
+head(iris_plot,10)
+
+ggplot(iris_plot, aes(x= Dissection, y= Measurement, fill =Species))+
+  geom_boxplot()+
+  labs(y= "Measurements (cm)",
+       title = "Grouped boxplots")
+
+```
+
+### Example: Lynx-Hare time series data
+
+#### Description
+
+Lynx: This is one of the classic studies of predator-prey interactions, the 90-year data set is the number, in thousands, of lynx pelts purchased by the Hudson's Bay Company of Canada. While this is an indirect measure of predation, the assumption is that there is a direct relationship between the number of pelts collected and the number of hare and lynx in the wild.
+
+Hare: Similar to above, this is the number, in thousands, of snowshoe hare pelts purchased by the Hudson's Bay Company of Canada.
+
+### geom_line vs geom_path:
+
+```{r}
+
+dat <- data.frame(hare = as.numeric(Hare), lynx = as.numeric(Lynx), year = as.numeric(time(Hare))
+)
+
+head(dat)
+
+p<- ggplot(dat, aes(hare, lynx)) + geom_point()+
+      labs(title = "pelts (in thousands)")
+
+p1<- ggplot(dat, aes(hare, lynx)) +
+  geom_path() +
+  geom_point()+
+  labs(title = "geom path")
+
+p2<- ggplot(dat, aes(hare, lynx)) +
+  geom_line() +
+  geom_point()+
+  labs(title = "geom line")
+
+p
+
+p1 + p2
+
+```
+
+Reasons become clearer when we add a color for the year variable:
+
+```{r}
+
+p1<- ggplot(dat, aes(hare, lynx, color= year)) +
+  geom_path() +
+  geom_point() +
+  labs(title = "geom path")+ 
+  labs(
+    x = "Hare pelts (in thousands)",
+    y = "Lynx pelts (in thousands)",
+    color = "Year",
+    caption = "Source: astsa (R package)"
+  )
+
+p2<- ggplot(dat, aes(hare, lynx, color= year)) +
+  geom_line() +
+  geom_point() +
+  labs(title = "geom line")+
+   labs(
+    x = "Hare pelts (in thousands)",
+    y = "Lynx pelts (in thousands)",
+    color = "Year",
+    caption = "Source: astsa (R package)"
+  )
+  
+p1 + p2
+
+```
+
+The geom_path connects the points from top to bottom as they appear in the data frame while the geom_line connects the points strictly from left to right in the order they appear in the plot. Hence both the plots are incorrect since both are time series, and the correct way to present them are as follows:
+
+```{r}
+
+dat_extnd<- data.frame(year= rep(dat$year, 2), pelts= c(dat$hare, dat$lynx),
+                        animal= rep(c("hare","lynx"), each= nrow(dat)) )
+head(dat_extnd)
+tail(dat_extnd)
+
+p1<- ggplot(dat_extnd, aes(year, pelts, color= animal)) +
+  geom_path() +
+  geom_point() +
+  labs(title = "geom path",
+    x = "year",
+    y = "pelts (in thousands)",
+    caption = "Source: astsa (R package)"
+  )
+
+p2<- ggplot(dat_extnd, aes(year, pelts, color= animal)) +
+  geom_line() +
+  geom_point() +
+  labs(title = "geom line",
+    x = "year",
+    y = "pelts (in thousands)",
+    caption = "Source: astsa (R package)"
+  )
+  
+p1 / p2
+```
+
+### Heatmaps and Contour plots: behaviour of tri-variate data
+
+### Example: 2d density of the Old Faithful Geyser Data
+
+#### Description
+
+Waiting time between eruptions and the duration of the eruption for the Old Faithful geyser are measured in Yellowstone National Park, Wyoming. A 2d density estimate of the waiting and eruptions variables data are done.
+
+```{r}
+head(faithfuld)
+
+p1 <- ggplot(faithfuld, aes(waiting, eruptions)) + 
+  geom_raster(aes(fill = density))+
+  labs(title= "geom raster")
+  
+p2 <- ggplot(faithfuld, aes(waiting, eruptions)) + 
+  geom_tile(aes(fill = density))+
+  labs(title= "geom tile")
+
+p1 
+p2
+
+u<- max(faithfuld$density)
+l<- min(faithfuld$density)
+
+sq <- seq(l, u+0.001, len=8)
+sq
+ffd2 <- cbind.data.frame(faithfuld, level= NA)
+
+for(i in 1:nrow(faithfuld)) {
+  for (j in 1:length(sq)) {
+    if(faithfuld$density[i] >= sq[j] & faithfuld$density[i] < sq[j+1]) {
+      ffd2$level[i] <- paste("level", j, sep ="")
+    }
+  }
+  
+}
+
+p1<- ggplot(ffd2, aes(x=waiting, y=eruptions, z = density, color = after_stat(level))) +
+     geom_contour() +
+     labs(color = "height", title = "Contour Lines") 
+     
+p2<- ggplot(ffd2, aes(x=waiting, y=eruptions, z = density, fill = after_stat(level))) +
+     geom_contour_filled() +
+     labs(fill = "height", title = "Filled Contours")
+
+p1
+p2
+
+```
+
+### Example: Boston Housing data.
+
+#### Description 
+
+The Boston data frame has 506 rows and 14 columns.
+
+ - crim:     per capita crime rate by town.
+ 
+ - zn :      proportion of residential land zoned for lots over 25,000 sq.ft.
+ 
+ - indus:    proportion of non-retail business acres per town.
+ 
+ - chas:     Charles River dummy variable (= 1 if tract bounds river; 0 otherwise).
+ 
+ - nox:      nitrogen oxides concentration (parts per 10 million).
+ 
+ - rm:       average number of rooms per dwelling.
+ 
+ - age:      proportion of owner-occupied units built prior to 1940.
+ 
+ - dis:      weighted mean of distances to five Boston employment centres.
+ 
+ - rad:      index of accessibility to radial highways.
+ 
+ - tax:      full-value property-tax rate per $10,000.
+ 
+ - ptratio:  pupil-teacher ratio by town.
+ 
+ - black:    $1000(Bk−0.63)^2$ where $Bk$ is the proportion of blacks by town.
+ 
+ - lstat:    lower status of the population (percent).
+ 
+ - medv:     median value of owner-occupied homes in $1000s.
+
+
+```{r}
+
+boston_cor <- cor(Boston)
+
+datc<- data.frame(Correlation= c(boston_cor), 
+                  Row= rep(colnames(boston_cor), each= nrow(boston_cor)),
+                  Col= rep(colnames(boston_cor), nrow(boston_cor)))
+
+# create the expanded dataset
+head(datc)
+
+ggplot(datc, aes(x= Col, y=Row, fill = Correlation))+
+  geom_tile() + 
+  labs(title = "geom tiles")
+  
+ggplot(datc, aes(x= Col, y=Row, fill = Correlation))+
+  geom_raster() +
+  labs(title = "geom raster")
+
+```
+
+$$\\[0.1in]$$
+
+## Scales (color adjustment):
+
+Color palettes are characterized by a gradation encompassing only a limited range of hues. These palettes are particularly well-suited for representing data that are quantitative or ordinal in nature. You can view all available sequential palettes using the display.brewer.all() function from the RColorBrewer package.
+
+The following color palettes represent a hierarchy in the data:
+
+```{r}
+display.brewer.all(type = "seq")
+
+```
+
+But the following palette represent no particular order:
+
+```{r}
+display.brewer.all(type = "qual")
+
+```
+
+
+### Some discrete scales for 'fill' option of the aes() function
+
+ - scale_fill_brewer
+ 
+ - scale_fill_fermenter
+ 
+ - scale_fill_binned which defaults to scale_fill_steps
+ 
+ - scale_fill_steps: produces a two-colour gradient
+ 
+ - scale_fill_steps2: produces a three-colour gradient with specified midpoint
+ 
+ - scale_fill_stepsn: produces an n-colour gradient
+ 
+ ** They have their versions of Scale_color_* as well.
+
+```{r, message=FALSE, warning=FALSE}
+
+ggplot(iris, aes(Sepal.Length, fill = Species)) +
+geom_density(shape = 1) +
+  labs(x = "Sepal Length (cm)",
+    caption = "Source: E. Anderson (1935)")+
+  labs(title = "Set1") +
+  scale_fill_brewer(palette = "Set1") +
+  
+  ggplot(iris, aes(Sepal.Length, fill = Species)) +
+geom_density(shape = 1) +
+  labs(x = "Sepal Length (cm)",
+    caption = "Source: E. Anderson (1935)")+
+  labs(title = "Dark2") +
+  scale_fill_brewer(palette = "Dark2")
+
+ggplot(datc, aes(x= Col, y=Row, fill = Correlation))+
+  geom_raster() +
+  labs(title = "geom raster with RdBu (6 breaks)")+
+scale_fill_fermenter(limits = c(-1, 1), palette = "RdBu", n.breaks = 6)
+  
+  ggplot(datc, aes(x= Col, y=Row, fill = Correlation))+
+  geom_raster() +
+  labs(title = "geom raster with Reds (8 breaks)")+
+scale_fill_fermenter(limits = c(-1, 1), palette = "Reds", n.breaks = 8)
+  
+```
+
+ 
+```{r}
+
+ggplot(datc, aes(x= Col, y=Row, fill = Correlation))+
+  geom_raster() +
+  scale_fill_steps(low = "grey", high = "brown")
+  
+ggplot(datc, aes(x= Col, y=Row, fill = Correlation))+
+  geom_raster() +
+  scale_fill_steps2(
+    low = "grey", 
+    mid = "white", 
+    high = "brown", 
+    midpoint = .02
+  )
+
+ggplot(datc, aes(x= Col, y=Row, fill = Correlation))+
+  geom_raster() +
+scale_fill_stepsn(n.breaks = 12, colours = terrain.colors(12))
+
+```
+
+
+
+### Some continuous scales for the 'fill' option of the aes() function:
+
+ - scale_fill_viridis_c (from viridis package)
+ 
+ - scale_fill_distiller
+ 
+ - scale_fill_continuous which defaults to scale_fill_gradient
+ 
+ - scale_fill_gradient: produces a two-colour gradient
+ 
+ - scale_fill_gradient2: produces a three-colour gradient with specified midpoint
+ 
+ - scale_fill_gradientn: produces an n-colour gradient
+ 
+ ** They have their versions of Scale_color_* as well.
+
+
+```{r}
+  ggplot(datc, aes(x= Col, y=Row, fill = Correlation))+
+  geom_raster() +
+  labs(title = "geom raster with viridis (12 breaks)")+
+scale_fill_viridis_c(limits = c(-1, 1), n.breaks = 12)
+
+ggplot(datc, aes(x= Col, y=Row, fill = Correlation))+
+  geom_raster() +
+  labs(title = "geom raster with viridis (12 breaks)")+
+scale_fill_viridis_c(limits = c(-1, 1), n.breaks = 12, option = "magma")
+```
+  
+#### For the old faithful density data:
+
+```{r}
+ggplot(faithfuld, aes(waiting, eruptions, fill = density)) +
+  geom_raster() + 
+  theme(legend.position = "none")+
+  scale_fill_distiller()+
+  
+ggplot(faithfuld, aes(waiting, eruptions, fill = density)) +
+  geom_raster() + 
+  theme(legend.position = "none")+
+  scale_fill_distiller(palette = "RdPu") +
+
+ggplot(faithfuld, aes(waiting, eruptions, fill = density)) +
+  geom_raster() + 
+  theme(legend.position = "none")+ scale_fill_distiller(palette = "YlOrBr")
+
+
+```
+ 
+```{r}
+ ggplot(faithfuld, aes(waiting, eruptions, fill = density)) +
+  geom_raster()+ theme(legend.position = "none")+ scale_fill_gradient(low = "grey", high = "brown") +
+
+  ggplot(faithfuld, aes(waiting, eruptions, fill = density)) +
+  geom_raster()+ theme(legend.position = "none")+
+scale_fill_gradient2(
+    low = "grey", 
+    mid = "white", 
+    high = "brown", 
+    midpoint = .02
+  )+
+ggplot(faithfuld, aes(waiting, eruptions, fill = density)) +
+  geom_raster()+ theme(legend.position = "none")+
+  scale_fill_gradientn(colours = terrain.colors(7))
+
+```
+
+$$\\[0.1in]$$
+
+## Guides:
+
+Using the guides() function, which accepts functions of the guide_*() family as arguments for the following purposes:
+
+ - Change the axis positions using guide_axis(),
+ 
+ - Change the order in which legends appear guide_legend(),
+ 
+ - Remove a legend,
+ 
+ - Reverse the direction in which legend values are sorted
+
+#### Examples:
+
+```{r, message=FALSE}
+
+p2 <- ggplot(faithfuld, aes(waiting, eruptions)) + 
+  geom_tile(aes(fill = density))+
+  labs(title= "geom tile")
+
+p2 + guides(x = guide_axis(title = NULL, position = "top"))
+
+ggplot(datc, aes(x= Col, y=Row, fill = Correlation))+
+  geom_tile() + 
+  labs(title = "geom tile: x labels and tickers missing") + 
+  guides(x = guide_axis(title = NULL, position = "NULL"))
+
+
+ggplot(iris, aes(x= Sepal.Width, y= Sepal.Length))+
+ geom_point() +
+  geom_smooth(aes(color = "loess", linewidth=2), method = "loess", se = T) + 
+  geom_smooth(aes(colour = "lm", linewidth=2), method = "lm", se = T) +
+  labs(colour = "Method") +
+  labs(color= "Method", x= "Sepal Width (cm)", 
+       y = "Sepal Length (cm)", color = "Species",
+       title = "with linewidth legend",
+         caption = "Data Source: R datasets") +
+
+ ggplot(iris, aes(x= Sepal.Width, y= Sepal.Length))+
+ geom_point()+
+  geom_smooth(aes(color = "loess", linewidth=2), method = "loess", se = T) + 
+  geom_smooth(aes(colour = "lm", linewidth=2), method = "lm", se = T) +
+  labs(colour = "Method") +
+  labs(color= "Method", x= "Sepal Width (cm)", 
+       y = "Sepal Length (cm)", color = "Species",
+       title = "linewidth legend gone",
+         caption = "Data Source: R datasets") +
+    guides(linewidth = "none")
+
+
+ggplot(iris, aes(x= Petal.Length, fill = Species)) +
+geom_histogram(aes(y=after_stat(density), alpha = 0.5), color = "black",
+                   lwd = 0.75, position = "identity",
+                   linetype = 1)+
+  labs(title = "with legend for alpha", x= "Petal Length (cm)") +
+  geom_density(alpha=.2)+
+  geom_rug() +
+  
+  ggplot(iris, aes(x= Petal.Length, fill = Species)) +
+geom_histogram(aes(y=after_stat(density), alpha = 0.5), color = "black",
+                   lwd = 0.75, position = "identity",
+                   linetype = 1)+
+  labs(title = "legend for alpha gone", x= "Petal Length (cm)") +
+  geom_density(alpha=.2)+
+  geom_rug()+
+    guides(alpha = "none")
+
+
+``` 
+
+
+```{r}
+
+ggplot(iris, aes(x= Sepal.Width, y= Sepal.Length))+
+   geom_point(aes(color= Species, size= Petal.Length))+
+
+ ggplot(iris, aes(x= Sepal.Width, y= Sepal.Length))+
+   geom_point(aes(color= Species, size= Petal.Length))+
+   guides(size = guide_legend(reverse=TRUE), color= guide_legend(reverse=TRUE) )
+
+```
+
+#### override the color parameter 
+
+```{r}
+
+ ggplot(iris, aes(x= Sepal.Width, y= Sepal.Length))+
+   geom_point(aes(color= Species, size= Petal.Length, alpha= Petal.Width))+
+  guides(color = guide_legend(override.aes = list(shape = 7, size = 3)))
+
+```
+
+$$\\[0.1in]$$
+
+##  Faceting:
+
+Ther following are the 3 functions to faceting,
+
+  - facet_null() (default): A single panel of plot.
+  
+  - facet_wrap(): 
+  
+It makes a long ribbon of panels and wraps it into 2d grid based on the levels of a character or factor variable. This is useful if you have a single variable with many levels and want to arrange the plots in a more space efficient manner.
+
+  - facet_grid():
+
+A generalization of the facet_wrap() in that, the panels are wrapped in 2d grid based on the levels of $2$ categorical variables.
+
+Consider the transformed iris data we considered earlier 'iris_plot':
+
+```{r}
+
+ggplot(iris_plot, aes(y= Measurement, fill =Species))+
+  geom_boxplot()+
+  facet_wrap(~ Dissection)
+
+ggplot(iris_plot, aes(y= Measurement, fill =Dissection))+
+  geom_boxplot()+
+  facet_wrap(~ Species)
+
+ggplot(iris_plot, aes(y= Measurement, fill =Dissection))+
+  geom_boxplot()+
+  facet_wrap(~ Species)+ 
+  theme(panel.spacing = unit(2, "lines"))
+
+ggplot(iris_plot, aes(x= Measurement, fill =Dissection))+
+  geom_density()+
+  facet_wrap(~ Species)+ 
+  theme(panel.spacing = unit(2, "lines"))
+
+ggplot(iris_plot, aes(x= Measurement, fill =Dissection))+
+  geom_density()+
+  facet_wrap(~ Species, scales= "free_x")+ 
+  theme(panel.spacing = unit(2, "lines"))+
+  labs(title ="free x")
+
+ggplot(iris_plot, aes(x= Measurement, fill =Dissection))+
+  geom_density()+
+  facet_wrap(~ Species, scales= "free_y")+ 
+  theme(panel.spacing = unit(2, "lines"))+
+  labs(title ="free y")
+
+ggplot(iris_plot, aes(x= Measurement, fill =Dissection))+
+  geom_density()+
+  facet_wrap(~ Species, scales= "free")+ 
+  theme(panel.spacing = unit(2, "lines"))+
+  labs(title ="free x and y")
+
+ggplot(iris_plot, aes(x= Measurement, fill =Dissection))+
+  geom_density()+
+  facet_wrap(~ Species, scales= "free", nrow=2)+ 
+  theme(panel.spacing = unit(2, "lines"))
+
+ggplot(iris_plot, aes(x=Measurement))+
+  geom_density()+
+  facet_wrap(~ Species+Dissection, scales= "free")
+
+ggplot(iris_plot, aes(x=Measurement, fill =Species))+
+  geom_density()+
+  facet_grid(.~ Dissection, scales= "free")
+
+ggplot(iris_plot, aes(x=Measurement, fill =Species))+
+  geom_density()+
+  facet_grid(Dissection~., scales= "free")
+
+ggplot(iris_plot, aes(x=Measurement))+
+  geom_density()+
+  facet_grid(Dissection~ Species)
+
+```
+
+
+## Themes
+
+It helps us change the appearance without altering the content of 
+
+```{r}
+ggplot(iris, aes(Sepal.Width, Petal.Width, color = Species, shape = Species)) +
+  geom_jitter(alpha = 0.5) +
+  labs( x = "Sepal Width (cm)", y = "Petal Width (cm)", caption = "Source: Edgar Anderson (1935)") +
+  guides(color = guide_legend(override.aes = list(alpha = 1, size = 3)))+
+  labs(title = "Default Theme")
+
+ggplot(iris, aes(Sepal.Width, Petal.Width, color = Species, shape = Species)) +
+  geom_jitter(alpha = 0.5) +
+  labs( x = "Sepal Width (cm)", y = "Petal Width (cm)", caption = "Source: Edgar Anderson (1935)") +
+  guides(color = guide_legend(override.aes = list(alpha = 1, size = 3)))+
+  labs(title = "Theme black and white") +
+  theme_bw()
+
+ggplot(iris, aes(Sepal.Width, Petal.Width, color = Species, shape = Species)) +
+  geom_jitter(alpha = 0.5) +
+  labs( x = "Sepal Width (cm)", y = "Petal Width (cm)", caption = "Source: Edgar Anderson (1935)") +
+  guides(color = guide_legend(override.aes = list(alpha = 1, size = 3)))+
+  labs(title = "Theme minimal") +
+  theme_minimal()
+
+ggplot(iris, aes(Sepal.Width, Petal.Width, color = Species, shape = Species)) +
+  geom_jitter(alpha = 0.5) +
+  labs( x = "Sepal Width (cm)", y = "Petal Width (cm)", caption = "Source: Edgar Anderson (1935)") +
+  guides(color = guide_legend(override.aes = list(alpha = 1, size = 3)))+
+  labs(title = "Theme minimal") +
+  theme(
+    panel.grid.major = element_line(color = "brown"),
+    plot.title = element_text(
+      family = "serif",
+      face = "bold",
+      hjust = 0.5
+    )
+  ) +
+  labs(title = "Adjusted Theme")
+
+
+ggplot(iris, aes(Sepal.Width, Petal.Width, color = Species, shape = Species)) +
+  geom_jitter(alpha = 0.5) +
+  labs( x = "Sepal Width (cm)", y = "Petal Width (cm)", caption = "Source: Edgar Anderson (1935)") +
+  guides(color = guide_legend(override.aes = list(alpha = 1, size = 3)))+
+  labs(title = "Theme minimal") +
+  theme(
+    panel.grid.major = element_line(color = "brown"),
+    plot.title = element_text(
+      family = "serif",
+      face = "bold",
+      hjust = 0.5),
+     axis.text.x=element_text(size=12),
+        axis.title.x=element_text(size=12),
+        axis.text.y=element_text(size=12),
+        axis.title.y=element_text(size=12),
+        legend.text=element_text(size=12),
+        legend.title=element_text(size=12),
+        title = element_text(size=12),
+        strip.text = element_text(size=12)
+  )+
+  labs(title = "Adjusted Theme with magnified texts")
+
+```
+
