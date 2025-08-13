@@ -4,7 +4,7 @@ The following are the resources presented during discussion:
 
 The documentation of the ‘ggplot2’ package. 
 
-  - https://cran.r-project.org/web/packages/ggplot2/refman/ggplot2.html#scale_colour_hue
+  - https://cran.r-project.org/web/packages/ggplot2/refman/ggplot2.html#ggplot2-package
 
 A handy cheatsheet: 
 
