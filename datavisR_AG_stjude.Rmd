@@ -32,9 +32,7 @@ knitr::opts_chunk$set(echo = TRUE)
 $$\\[0.1in]$$
 
 
-### What does the GG: grammar of Graphics involve?
-
-https://link.springer.com/chapter/10.1007/978-3-642-21551-3_13
+### Components of the GG: grammar of Graphics
   
   - Geoms & Aesthetic mappings:
   
